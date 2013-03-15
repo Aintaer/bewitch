@@ -5,7 +5,7 @@
 (function() {
   'use strict';
 
-  var routes = require('./config.json'),
+  var config = require('./config.json'),
   Watcher = require('./lib/watcher'),
   Master = require('./lib/ssh_master'),
   rsync = require('./lib/rsync'),
@@ -42,7 +42,7 @@
   }
 
   // Spawn all the routes!
-  spawn( routes );
+  spawn( config.routes );
 
   process.on('SIGINT', function() {
     process.exit();

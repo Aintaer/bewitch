@@ -1,3 +1,5 @@
 {
-  "test" : "root@dev10.be.lan:/root/tmp"
+  "routes": {
+    "test" : "root@dev10.be.lan:/root/tmp"
+  }
 }
