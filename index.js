@@ -16,16 +16,21 @@
   function spawn(routes) {
     var sources = Object.keys(routes);
 
-    (function spawnMaster() {
+    (function spawnNext() {
       if (!sources.length) { return; }
       var src = sources.shift(),
       dest = routes[src],
+      host = dest.split(':'),
       master;
 
-      src = fs.realpathSync(src);
+      try {
+        src += fs.statSync(src).isDirectory() ? '/' : '';
+      } catch (readErr) {
+        spawnNext();
+        return;
+      }
 
-      master = new Master( dest.split(':')[0] );
-      master.on('connection', function(socket) {
+      function watch(socket) {
         console.log('Listening to '+src);
         var watcher = new Watcher(src, function(o) {
           console.log.apply(console, Object.keys(o));
@@ -35,9 +40,17 @@
         });
         watchers.push(watcher);
 
-        spawnMaster();
-      });
-      masters.push(master);
+        spawnNext();
+      }
+
+      if (host.length > 1) {
+        master = new Master( host[0] );
+        master.on('connection', watch);
+        masters.push(master);
+      }
+      else {
+        watch();
+      }
     }());
   }
 
