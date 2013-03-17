@@ -1,0 +1,5 @@
+{
+	"routes": {
+		"path/to/src" : "user@example.com:/path/to/dest"
+	}
+}

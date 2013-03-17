@@ -1,0 +1,9 @@
+{
+  "routes": [{
+    "source" : "be.net",
+    "destination" : "root@dev.local:/var/www/vhosts/",
+    "ignore" : [ ".git" ],
+	"include" : [ "public/test.php", "beta" ],
+	"exclude" : [ "sass" ]
+  }]
+}
