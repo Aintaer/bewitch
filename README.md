@@ -11,7 +11,7 @@ npm -g i bewitch
 
 # Usage
 
-
+Simple is as simple does.
 ```
 bewitch path/to/source user@host:/path/to/destination
 ```
@@ -19,10 +19,10 @@ bewitch path/to/source user@host:/path/to/destination
 Of course bewitch also allows multiple routes.
 
 ```
-bewitch -f options.json
+bewitch -c options.json
 ```
 
-options.json
+**options.json**:
 ```javascript
 {
 	"ignore" : ".git",
@@ -35,7 +35,7 @@ options.json
 
 When you need fine-grained control, bewitch is there for you.
 
-options.json
+**options.json**:
 ```javascript
 {
 	"ignore" : [ ".git", ".svn" ],
