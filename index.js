@@ -14,6 +14,7 @@
   routes = require('./routes'),
   fs = require('fs'),
   util = require('util'),
+  path = require('path'),
   config = {routes:{}};
 
   function _argv(_) {
@@ -35,7 +36,8 @@
 
   if (argv.c) {
     // config file
-    fs.readFile(argv.c, {encoding: 'utf8'}, function(err, data) {
+    process.chdir(path.dirname(argv.c));
+    fs.readFile(path.basename(argv.c), {encoding: 'utf8'}, function(err, data) {
       if (err) { 
         console.error(err.toString());
         process.exit();
@@ -45,7 +47,7 @@
        _argv(argv._);
       }
       // Spawn all the routes!
-      routes.spawn(config.routes);
+      routes.spawn(config);
     });
   }
   else {
@@ -55,6 +57,6 @@
       process.exit();
     }
      _argv(argv._);
-    routes.spawn(config.routes);
+    routes.spawn(config);
   }
 }());
