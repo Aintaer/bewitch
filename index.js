@@ -1,61 +1,61 @@
 #!/usr/bin/env node
 
-/*jslint stupid:true */
 /*global process */
 (function() {
   'use strict';
 
   var config = require('./config.json'),
-  Watcher = require('./lib/watcher'),
   Master = require('./lib/ssh_master'),
-  rsync = require('./lib/rsync'),
-  fs = require('fs'),
+  Route = require('./lib/route'),
   masters = [],
-  watchers = [];
+  routes = [];
 
-  function spawn(routes) {
-    var sources = Object.keys(routes);
+  function spawn(config) {
+    // config.routes can be in two formats
+    // Object of source : destination
+    // Array of { source: '', destination: '' }
+    if (!config.routes) { return; }
+    var pathDefs = config.routes.length 
+    ? config.routes 
+    : Object.keys(config.routes).map(function(source) {
+      return {source: source, destination: this[source]};
+    }, config.routes);
 
+    // async loop
     (function spawnNext() {
-      if (!sources.length) { return; }
-      var src = sources.shift(),
-      dest = routes[src],
-      host = dest.split(':'),
+      if (!pathDefs.length) { return; }
+      var pathDef = pathDefs.shift(),
+      host = pathDef.destination.split(':'),
       master;
 
-      try {
-        src += fs.statSync(src).isDirectory() ? '/' : '';
-      } catch (readErr) {
-        spawnNext();
-        return;
-      }
-
-      function watch(socket) {
-        console.log('Listening to '+src);
-        var watcher = new Watcher(src, function(o) {
-          console.log.apply(console, Object.keys(o));
-          rsync.copy(src, dest, function() {
-            console.log(src, '->', dest);
-          }, socket);
-        });
-        watchers.push(watcher);
-
+      function makeRoute(socket) {
+        try {
+          routes.push(new Route(
+            {path: pathDef.source, ignore: pathDef.ignore},
+            {path: pathDef.destination, socket: socket},
+            {isCode: pathDef.isCode, include: pathDef.include, exclude: pathDef.exclude}
+          ));
+          console.log('Listening to '+pathDef.source);
+        }
+        catch (readErr) {
+          console.error(readErr.toString());
+        }
         spawnNext();
       }
 
       if (host.length > 1) {
         master = new Master( host[0] );
-        master.on('connection', watch);
+        master.on('connection', makeRoute);
         masters.push(master);
       }
       else {
-        watch();
+        makeRoute();
       }
     }());
   }
 
   // Spawn all the routes!
-  spawn( config.routes );
+  spawn(config);
 
   process.on('SIGINT', function() {
     process.exit();
@@ -67,9 +67,9 @@
         master.destroy();
       });
     }
-    if (watchers.length) {
-      watchers.forEach(function(watcher) {
-        watcher.destroy();
+    if (routes.length) {
+      routes.forEach(function(route) {
+        route.destroy();
       });
     }
   });
