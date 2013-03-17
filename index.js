@@ -4,74 +4,57 @@
 (function() {
   'use strict';
 
-  var config = require('./config.json'),
-  Master = require('./lib/ssh_master'),
-  Route = require('./lib/route'),
-  masters = [],
-  routes = [];
+  var argv = require('optimist')
+    .usage('Watch directories to copy to a remote location\nUsage: $0 [-c file] [source] [destination]')
+    .alias('c', 'config')
+    .describe('c', "Configuration file")
+    .argv,
+  //argv._ [0] and [1] are command-line src and dest
+  //argv.c should be path to config.json
+  routes = require('./routes'),
+  fs = require('fs'),
+  util = require('util'),
+  config = {routes:{}};
 
-  function spawn(config) {
-    // config.routes can be in two formats
-    // Object of source : destination
-    // Array of { source: '', destination: '' }
-    if (!config.routes) { return; }
-    var pathDefs = config.routes.length 
-    ? config.routes 
-    : Object.keys(config.routes).map(function(source) {
-      return {source: source, destination: this[source]};
-    }, config.routes);
-
-    // async loop
-    (function spawnNext() {
-      if (!pathDefs.length) { return; }
-      var pathDef = pathDefs.shift(),
-      host = pathDef.destination.split(':'),
-      master;
-
-      function makeRoute(socket) {
-        try {
-          routes.push(new Route(
-            {path: pathDef.source, ignore: pathDef.ignore},
-            {path: pathDef.destination, socket: socket},
-            {isCode: pathDef.isCode, include: pathDef.include, exclude: pathDef.exclude}
-          ));
-          console.log('Listening to '+pathDef.source);
-        }
-        catch (readErr) {
-          console.error(readErr.toString());
-        }
-        spawnNext();
-      }
-
-      if (host.length > 1) {
-        master = new Master( host[0] );
-        master.on('connection', makeRoute);
-        masters.push(master);
-      }
-      else {
-        makeRoute();
-      }
-    }());
+  function _argv(_) {
+    if (util.isArray(config.routes)) {
+      config.routes.push({source: _[0], destination: _[1]});
+    }
+    else if (typeof config.routes === 'object') {
+      config.routes[_[0]] = _[1];
+    }
   }
-
-  // Spawn all the routes!
-  spawn(config);
 
   process.on('SIGINT', function() {
     process.exit();
   });
 
   process.on('exit', function destroy() {
-    if (masters.length) {
-      masters.forEach(function(master) {
-        master.destroy();
-      });
-    }
-    if (routes.length) {
-      routes.forEach(function(route) {
-        route.destroy();
-      });
-    }
+    routes.destroy();
   });
 
+  if (argv.c) {
+    // config file
+    fs.readFile(argv.c, {encoding: 'utf8'}, function(err, data) {
+      if (err) { 
+        console.error(err.toString());
+        process.exit();
+      }
+      config = JSON.parse(data);
+      if (argv._.length >= 2) {
+       _argv(argv._);
+      }
+      // Spawn all the routes!
+      routes.spawn(config.routes);
+    });
+  }
+  else {
+    // command line arguments only
+    if (argv._.length < 2) {
+      require('optimist').showHelp();
+      process.exit();
+    }
+     _argv(argv._);
+    routes.spawn(config.routes);
+  }
 }());
