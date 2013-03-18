@@ -17,8 +17,8 @@
     "sync"
   ],
   "dependencies": {
-	  "optimist": ">=0.2",
-      "minimatch": ">=0.3"
+	  "optimist": ">=0.3",
+      "minimatch": ">=0.2"
   },
   "engines": {
 	  "node": ">=0.8"
