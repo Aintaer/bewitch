@@ -9,8 +9,10 @@ module.exports=(function() {
     var allowed = {ignore:1, include:1, exclude:1};
     return Array.prototype.reduce.call(arguments, function(obj, source) {
       var i;
-      for (i in allowed) {
-        obj[i] = source[i];
+      for (i in source) {
+        if (allowed.hasOwnProperty(i)) {
+          obj[i] = source[i];
+        }
       }
       return obj;
     }, {});
