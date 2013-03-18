@@ -1,6 +1,6 @@
 {
   "name": "bewitch",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "File watch and synchronizer",
   "main": "index.js",
   "bin": "./index.js",
