@@ -32,22 +32,26 @@ module.exports=(function() {
         return {source: source, destination: this[source]};
       }, config.routes),
       routes = this.routes,
-      masters = this.masters;
+      masters = this.masters,
+      watchers = {};
 
       // async loop
       (function spawnNext() {
         if (!pathDefs.length) { return; }
         var pathDef = pathDefs.shift(),
         host = pathDef.destination.split(':'),
-        master;
+        master, route;
 
         function makeRoute(socket) {
           try {
-            routes.push(new Route(
+            route = new Route(
+              watchers[pathDef.source] ||
               {path: pathDef.source, ignore: pathDef.ignore},
               {path: pathDef.destination, socket: socket},
               merge(config, pathDef)
-            ));
+            );
+            routes.push(route);
+            watchers[pathDef.source] = route.watcher;
             console.log('Listening to '+pathDef.source);
           }
           catch (readErr) {
