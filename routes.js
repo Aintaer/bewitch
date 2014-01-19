@@ -26,7 +26,7 @@ module.exports=(function() {
       // config.routes can be in two formats
       // Object of source : destination
       // Array of { source: '', destination: '' }
-      var pathDefs = config.routes.length 
+      var pathDefs = config.routes.length
       ? /* array  */ config.routes
       : /* object */ Object.keys(config.routes).map(function(source) {
         return {source: source, destination: this[source]};
