@@ -18,7 +18,8 @@
   ],
   "dependencies": {
     "optimist": ">=0.3",
-    "minimatch": ">=0.2"
+    "minimatch": ">=0.2",
+    "chokidar": "~0.8.1"
   },
   "engines": {
     "node": ">=0.8"
